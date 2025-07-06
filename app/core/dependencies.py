@@ -1,3 +1,5 @@
+# # core/dependencies.py
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,13 +8,14 @@ from app.db.models.user import User
 from app.schemas.token import TokenData
 from app.crud.user import get_user_by_email
 from app.db.session import get_session
+from app.schemas.user import UserRead
 
 bearer_scheme = HTTPBearer()
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_session)
-) -> User: 
+) -> UserRead: 
     token = credentials.credentials
     payload = decode_access_token(token)
     if payload is None:
@@ -39,4 +42,4 @@ async def get_current_user(
         )
 
     # Opcional: devolver User completo o solo TokenData, según necesites
-    return user
+    return UserRead.model_validate(user) 

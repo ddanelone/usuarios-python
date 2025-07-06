@@ -1,3 +1,4 @@
+# app/crud/user.py
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
@@ -12,7 +13,12 @@ async def get_user(db: AsyncSession, user_id: int) -> User | None:
     return result.scalars().first()
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
-    result = await db.execute(select(User).where(User.email == email))
+    normalized_email = email.lower()
+    result = await db.execute(select(User).where(User.email == normalized_email))
+    return result.scalars().first()
+
+async def get_user_by_dni(db: AsyncSession, dni: str) -> User | None:
+    result = await db.execute(select(User).where(User.dni == dni))
     return result.scalars().first()
 
 async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[User]:
@@ -20,22 +26,11 @@ async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[U
     return list(result.scalars().all())
 
 async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
-    # Obtener dict de datos, excluyendo password
     data = user_in.model_dump(exclude={"password"})
-
-    # Convertir rol enum a string
-    # data["rol"] = data["rol"].value
-
-    # Generar hash de la contraseña
+    data["email"] = data["email"].lower()  # 👈 normalizar
     hashed_password = pwd_context.hash(user_in.password)
-
-    # Añadir el hash a los datos
     data["password_hash"] = hashed_password
-
-    # Crear el objeto User con los datos correctos
     user = User(**data)
-
-    # Agregar, commit y refresh
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -43,9 +38,8 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
 
 async def update_user(db: AsyncSession, user_id: int, user_in: UserUpdate) -> User | None:
     values = user_in.model_dump(exclude_unset=True)
-   # if "rol" in values and values["rol"] is not None:
-   #     values["rol"] = values["rol"].value  # Convertir enum a string si está presente
-
+    if "email" in values:
+        values["email"] = values["email"].lower()  # 👈 normalizar si viene email
     stmt = (
         update(User)
         .where(User.id == user_id)

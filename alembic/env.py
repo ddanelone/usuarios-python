@@ -1,3 +1,5 @@
+# alembic/.env.py
+
 from logging.config import fileConfig
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -62,6 +64,3 @@ if context.is_offline_mode():
 else:
     import asyncio
     asyncio.run(run_migrations_online())
-
-SECRET_KEY="asdfas6535$&78kañsfp))/67/%$kljdfhald&%&mi"
-ACCESS_TOKEN_EXPIRE_MINUTES=60
