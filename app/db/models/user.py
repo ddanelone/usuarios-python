@@ -4,9 +4,6 @@ from app.db.base import Base
 from sqlalchemy import Column, Integer, String, Date, DateTime
 from datetime import datetime
 
-
-rol = Column(PgEnum(UserRole, name="rolusuario", create_type=True), nullable=False)
-
 class User(Base):
     __tablename__ = "users"
 
@@ -16,7 +13,8 @@ class User(Base):
     dni = Column(String, unique=True, nullable=False)
     fecha_nacimiento = Column(Date, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
-    rol = Column(PgEnum(UserRole, name="rolusuario", create_type=True), nullable=False)
+    rol = Column(PgEnum(UserRole, name="rolusuario", native_enum=False, create_type=True), nullable=False)
+    password_hash = Column(String, nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

@@ -1,14 +1,15 @@
 from fastapi import FastAPI
-from app.routers import user
+from app.routers import user, auth
 from app.db.base import Base
 from app.db.session import engine
 
-# 👇 IMPORTANTE: este import es lo que registra el modelo User en Base.metadata
+# Importar modelos para crear tablas
 from app.db.models import user as user_models
 
 app = FastAPI()
 
 app.include_router(user.router)
+app.include_router(auth.router)  # <--- acá incluimos el auth
 
 @app.on_event("startup")
 async def startup():
