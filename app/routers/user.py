@@ -1,4 +1,5 @@
 # routers/user.py
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import cast 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +24,8 @@ async def create_user_endpoint(user_in: UserCreate, db: AsyncSession = Depends(g
     existing_dni = await get_user_by_dni(db, user_in.dni)
     if existing_dni:
         raise HTTPException(status_code=400, detail="DNI already registered")
+    
+    logging.info(f"[ALTA USUARIO] Se creó el usuario {User.email} con rol {User.rol}.")
 
     return await create_user(db, user_in)
 
@@ -78,6 +81,9 @@ async def delete_user_endpoint(
     success = await delete_user(db, user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
+
+    logging.warning(f"[BAJA USUARIO] Usuario {user_id} eliminado por {current_user.email}.")
+
     return None
 
 @router.patch("/{user_id}/password", status_code=status.HTTP_204_NO_CONTENT)
@@ -90,4 +96,7 @@ async def update_password_endpoint(
     if user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Sólo puedes cambiar tu propia contraseña")
     await update_user_password(db, user_id, passwords.current_password, passwords.new_password)
+
+    logging.info(f"[PASSWORD] Usuario {User.email} actualizó su contraseña.")
+
     return None

@@ -11,6 +11,19 @@ class UserRole(str, Enum):
     ALUMNO = "ALUMNO"
     INVITADO = "INVITADO"
 
+def validar_password(password: str) -> str:
+    if len(password) < 8 or len(password) > 16:
+        raise ValueError("La contraseña debe tener entre 8 y 16 caracteres.")
+    if not re.search(r"[A-Z]", password):
+        raise ValueError("Debe contener al menos una letra mayúscula.")
+    if not re.search(r"[a-z]", password):
+        raise ValueError("Debe contener al menos una letra minúscula.")
+    if not re.search(r"\d", password):
+        raise ValueError("Debe contener al menos un número.")
+    if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>/?]", password):
+        raise ValueError("Debe contener al menos un carácter especial.")
+    return password
+ 
 class UserBase(BaseModel):
     nombres: str = Field(..., min_length=1)
     apellidos: str = Field(..., min_length=1)
@@ -20,17 +33,11 @@ class UserBase(BaseModel):
     rol: UserRole
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8, max_length=16)
+    password: str
 
     @validator("password")
-    def validate_password(cls, v):
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("La contraseña debe contener al menos una letra mayúscula.")
-        if not re.search(r"[a-z]", v):
-            raise ValueError("La contraseña debe contener al menos una letra minúscula.")
-        if not re.search(r"\d", v):
-            raise ValueError("La contraseña debe contener al menos un número.")
-        return v
+    def check_password(cls, v):
+        return validar_password(v)
 
 class UserRead(UserBase):
     id: int
@@ -48,14 +55,8 @@ class UserUpdate(BaseModel):
 
 class UserUpdatePassword(BaseModel):
     current_password: str = Field(..., min_length=8)
-    new_password: str = Field(..., min_length=8, max_length=16)
+    new_password: str
 
     @validator("new_password")
-    def validate_new_password(cls, v):
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Debe tener al menos una mayúscula")
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Debe tener al menos una minúscula")
-        if not re.search(r"\d", v):
-            raise ValueError("Debe tener al menos un número")
-        return v
+    def check_new_password(cls, v):
+        return validar_password(v)

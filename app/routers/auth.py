@@ -29,6 +29,8 @@ async def login(form_data: UserLogin, db: AsyncSession = Depends(get_session)):
         "user_role": user.rol
     }
     access_token = create_access_token(data=token_data)
+    
+    logging.info(f"[LOGIN] Usuario {user.email} inició sesión exitosamente.")
 
     return {
         "access_token": access_token,
