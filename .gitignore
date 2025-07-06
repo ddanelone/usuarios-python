@@ -1,0 +1,21 @@
+# Bytecode de Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Archivos temporales o de entorno
+*.env
+.env.*
+*.sqlite3
+*.db
+*.log
+
+# Configuraciones de VSCode, PyCharm y otros editores
+.vscode/
+.idea/
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+.python-version
