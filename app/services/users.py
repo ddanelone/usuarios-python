@@ -5,11 +5,12 @@ from sqlalchemy.future import select
 from passlib.context import CryptContext
 from sqlalchemy.exc import IntegrityError
 
+from app.core.security import verify_password
 from app.crud.user import get_user
 from app.db.models.user import User
 from app.schemas.user import UserCreate
 
-from typing import cast
+from datetime import datetime
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -38,22 +39,21 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
         raise HTTPException(status_code=400, detail=detail)
     return db_user
 
-async def update_user_password(db: AsyncSession, user_id: int, current_password: str, new_password: str):
+async def update_user_password(
+    db: AsyncSession,
+    user_id: int,
+    current_password: str,
+    new_password: str
+):
     user = await get_user(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    # cast para que PyLance entienda que es un str (valor de la columna)
-    password_hash = cast(str, user.password_hash)
+    if not verify_password(current_password, user.password_hash):
+        raise HTTPException(status_code=403, detail="Contraseña actual incorrecta")
 
-    if not pwd_context.verify(current_password, password_hash):
-        raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
-
-    hashed_new = pwd_context.hash(new_password)
-
-    # Asignar el hash nuevo
-    user.password_hash = hashed_new  #type: ignore
-
+    user.password_hash = pwd_context.hash(new_password)
+    user.last_password_change = datetime.utcnow()  # ⬅️ acá se actualiza el campo
     db.add(user)
     await db.commit()
     await db.refresh(user)

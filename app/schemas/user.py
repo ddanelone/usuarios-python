@@ -20,8 +20,6 @@ def validar_password(password: str) -> str:
         raise ValueError("Debe contener al menos una letra minúscula.")
     if not re.search(r"\d", password):
         raise ValueError("Debe contener al menos un número.")
-    if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>/?]", password):
-        raise ValueError("Debe contener al menos un carácter especial.")
     return password
  
 class UserBase(BaseModel):

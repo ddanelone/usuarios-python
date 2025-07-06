@@ -95,8 +95,10 @@ async def update_password_endpoint(
 ):
     if user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Sólo puedes cambiar tu propia contraseña")
+
     await update_user_password(db, user_id, passwords.current_password, passwords.new_password)
 
-    logging.info(f"[PASSWORD] Usuario {User.email} actualizó su contraseña.")
+    logging.info(f"[PASSWORD] Usuario {current_user.email} actualizó su contraseña.")
 
     return None
+
