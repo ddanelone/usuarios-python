@@ -1,3 +1,4 @@
+# app/services/auth.py
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud.user import get_user_by_email
 from app.core.security import (

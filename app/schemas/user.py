@@ -1,5 +1,4 @@
-## app/schemas/user.py
-
+# app/schemas/user.py
 from pydantic import BaseModel, EmailStr, Field, validator
 from datetime import date
 from enum import Enum
