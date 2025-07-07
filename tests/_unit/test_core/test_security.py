@@ -1,10 +1,9 @@
 # tests/test_core/test_security.py
-import pytest
 from datetime import timedelta, datetime
 from time import sleep
 from app.core import security
 from app.core.config import settings
-from jose import JWTError, jwt
+from jose import jwt
 
 def test_get_password_hash_and_verify_password():
     password = "MySecret123"

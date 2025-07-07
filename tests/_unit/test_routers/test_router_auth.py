@@ -1,7 +1,6 @@
 # tests/test_routers/test_router_auth.py
 from datetime import date
 import pytest
-
 from app.schemas.user import UserCreate, UserRole
 from app.crud.user import create_user
 from httpx import AsyncClient

@@ -1,11 +1,9 @@
 # tests/integration/test_int_router_auth.py
-
 import pytest
 from httpx import AsyncClient
 from datetime import datetime, timedelta
 from jose import jwt
 
-from app.schemas.user import UserRole
 from app.core.security import SECRET_KEY, ALGORITHM
 from app.db.models.user import User
 

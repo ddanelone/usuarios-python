@@ -5,7 +5,7 @@ from datetime import date
 
 from app.core.security import create_access_token
 from app.schemas.user import UserCreate, UserRole
-from app.crud.user import create_user, get_user_by_email
+from app.crud.user import create_user
 
 async def create_test_user_in_db(db, **kwargs):
     user_data = {
