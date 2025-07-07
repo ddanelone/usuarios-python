@@ -1,3 +1,4 @@
+# app/core/config.py
 from pydantic_settings import BaseSettings
 from datetime import timedelta
 from pydantic import Field
@@ -8,7 +9,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     MAX_ATTEMPTS: int = 3
-    LOCKOUT_TIME: int = 900  # en segundos
+    # en segundos
+    LOCKOUT_TIME: int = 900 
     
     BCRYPT_ROUNDS: int = Field(default=12)
 

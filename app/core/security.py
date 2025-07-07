@@ -51,3 +51,6 @@ def verify_password_reset_token(token: str):
         return payload.get("sub")
     except JWTError:
         return None
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)

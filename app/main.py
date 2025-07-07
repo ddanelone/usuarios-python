@@ -1,3 +1,4 @@
+# app/main.py
 from fastapi import FastAPI
 from app.core.login_config import configure_logging
 from app.routers import user, auth
