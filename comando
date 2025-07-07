@@ -1,1 +1,11 @@
+# SERVER
+
 python -m uvicorn app.main:app --reload
+
+# TESTS
+
+pytest
+
+# INFORME DE COBERTURA
+
+pytest --cov=app --cov-report=html
