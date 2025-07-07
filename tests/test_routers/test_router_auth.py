@@ -6,10 +6,7 @@ from app.schemas.user import UserCreate, UserRole
 from app.crud.user import create_user
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-<<<<<<< HEAD
 from app.core.security import create_access_token
-=======
->>>>>>> 16177a0d52b4045cf655e360a3cfa4a953ba1298
 
 @pytest.mark.asyncio
 async def test_login_success(async_client: AsyncClient, async_db: AsyncSession):
@@ -38,7 +35,6 @@ async def test_login_success(async_client: AsyncClient, async_db: AsyncSession):
     assert data["token_type"] == "bearer"
     assert data["user_id"] > 0
     assert data["user_role"] == "ADMIN"
-<<<<<<< HEAD
 
 @pytest.mark.asyncio
 async def test_forgot_password_success(async_client: AsyncClient, async_db: AsyncSession):
@@ -121,5 +117,3 @@ async def test_login_wrong_credentials(async_client: AsyncClient, async_db: Asyn
     assert "incorrect email or password" in response.json()["detail"].lower()
 
 
-=======
->>>>>>> 16177a0d52b4045cf655e360a3cfa4a953ba1298

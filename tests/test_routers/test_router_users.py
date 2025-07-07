@@ -1,7 +1,6 @@
 # tests/test_routers/test_router_users.py
 import pytest
 from httpx import AsyncClient
-<<<<<<< HEAD
 from datetime import date
 
 from app.core.security import create_access_token
@@ -25,8 +24,6 @@ async def create_test_user_in_db(db, **kwargs):
 def get_auth_header(email: str):
     token = create_access_token({"sub": email})
     return {"Authorization": f"Bearer {token}"}
-=======
->>>>>>> 16177a0d52b4045cf655e360a3cfa4a953ba1298
 
 @pytest.mark.asyncio
 async def test_create_user(async_client: AsyncClient):
@@ -40,7 +37,6 @@ async def test_create_user(async_client: AsyncClient):
         "rol": "DOCENTE"
     }
     response = await async_client.post("/users/", json=payload)
-<<<<<<< HEAD
     assert response.status_code == 201
     assert response.json()["email"] == "ana@example.com"
 
@@ -158,8 +154,3 @@ async def test_update_password_not_self(async_client: AsyncClient, async_db):
 
     response = await async_client.patch(f"/users/{user2.id}/password", json=payload, headers=headers)
     assert response.status_code == 403
-=======
-    assert response.status_code == 201, response.text
-    data = response.json()
-    assert data["email"] == "ana@example.com"
->>>>>>> 16177a0d52b4045cf655e360a3cfa4a953ba1298
