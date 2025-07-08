@@ -4,6 +4,10 @@ from datetime import datetime
 from app.services.auth import login_user, forgot_password_process, reset_password_process
 from app.schemas.token import UserLogin, ForgotPasswordRequest, ResetPasswordRequest
 from app.core.security import create_password_reset_token, verify_password
+from unittest.mock import patch, ANY
+from app.services.auth import forgot_password_process
+
+
 
 @pytest.mark.asyncio
 async def test_login_user_success(async_db, test_user):
@@ -33,10 +37,17 @@ async def test_login_user_locked_out(async_db, test_user):
     assert "Demasiados intentos fallidos" in str(exc_info.value)
 
 @pytest.mark.asyncio
-async def test_forgot_password_process(async_db, test_user):
+@patch("app.services.auth.send_reset_email")
+async def test_forgot_password_process(mock_send_email, async_db, test_user):
+    mock_send_email.return_value = None
+
     request = ForgotPasswordRequest(email=test_user.email)
     result = await forgot_password_process(request, async_db)
-    assert result["message"] == "Se envió un email con instrucciones (simulado)."
+
+    assert "email" in request.model_dump()
+    assert result["message"].lower().startswith("se envió un email")
+    mock_send_email.assert_called_once_with(test_user.email, ANY)
+
 
 @pytest.mark.asyncio
 async def test_reset_password_process(async_db, test_user):

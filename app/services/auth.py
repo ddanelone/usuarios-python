@@ -13,6 +13,7 @@ import logging
 from datetime import datetime, timedelta
 import os
 
+from app.services.email import send_reset_email
 from app.services.users import update_user_password_by_email
 
 
@@ -77,12 +78,11 @@ async def forgot_password_process(request, db: AsyncSession):
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no registrado")
 
-    token = create_password_reset_token(user.email)  # type: ignore
+    token = create_password_reset_token(user.email)
 
-    # Enviar por email (en producción). Por ahora lo mostramos por consola:
-    logging.warning(f"[RECUPERAR CONTRASEÑA] Token para {user.email}: {token}")
+    await send_reset_email(user.email, token)
 
-    return {"message": "Se envió un email con instrucciones (simulado)."}
+    return {"message": "Se envió un email con instrucciones."}
 
 
 async def reset_password_process(request, db: AsyncSession):

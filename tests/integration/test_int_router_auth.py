@@ -3,7 +3,7 @@ import pytest
 from httpx import AsyncClient
 from datetime import datetime, timedelta
 from jose import jwt
-
+from unittest.mock import patch, ANY
 from app.core.security import SECRET_KEY, ALGORITHM
 from app.db.models.user import User
 
@@ -36,11 +36,16 @@ async def test_login_unregistered_user(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_forgot_password_valid_email(async_client: AsyncClient, test_user: User):
+@patch("app.services.auth.send_reset_email")
+async def test_forgot_password_valid_email(mock_send_email, async_client: AsyncClient, test_user: User):
+    mock_send_email.return_value = None
+
     payload = {"email": test_user.email}
     response = await async_client.post("/auth/forgot-password", json=payload)
+
     assert response.status_code == 200
     assert "email con instrucciones" in response.text.lower()
+    mock_send_email.assert_called_once_with(test_user.email, ANY)
 
 
 @pytest.mark.asyncio
