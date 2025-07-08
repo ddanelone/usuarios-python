@@ -10,4 +10,8 @@ python_jose==3.5.0
 SQLAlchemy==2.0.41
 uvicorn==0.30.6 
 alembic==1.16.2
-fastapi_mail
+fastapi-mail
+pytest==8.4.1
+pytest-asyncio==1.0.0
+pytest-cov==6.2.1
+httpx==0.28.1
