@@ -14,11 +14,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Print debug variables
-        run: |
-          echo "ACTIONS_RUNNER_DEBUG=$ACTIONS_RUNNER_DEBUG"
-          echo "ACTIONS_STEP_DEBUG=$ACTIONS_STEP_DEBUG"
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -31,9 +26,9 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest --cov=app --cov-report=xml
+          pytest --cov=app tests/ --cov-report=xml
 
-          - name: Upload coverage reports to Codecov
-          uses: codecov/codecov-action@v5
-          with:
-            token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
