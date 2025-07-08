@@ -14,6 +14,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Print debug variables
+        run: |
+          echo "ACTIONS_RUNNER_DEBUG=$ACTIONS_RUNNER_DEBUG"
+          echo "ACTIONS_STEP_DEBUG=$ACTIONS_STEP_DEBUG"
+
+          - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
