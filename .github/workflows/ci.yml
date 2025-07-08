@@ -27,6 +27,18 @@ jobs:
       - name: Set environment variables
         run: echo "DATABASE_URL=sqlite+aiosqlite:///:memory:" >> $GITHUB_ENV
 
+      - name: Set environment variables
+        run: |
+          echo "SECRET_KEY=secretfortests" >> $GITHUB_ENV
+          echo "DATABASE_URL=sqlite+aiosqlite:///:memory:" >> $GITHUB_ENV
+          echo "MAIL_USERNAME=test@example.com" >> $GITHUB_ENV
+          echo "MAIL_PASSWORD=password123" >> $GITHUB_ENV
+          echo "MAIL_FROM=test@example.com" >> $GITHUB_ENV
+          echo "MAIL_PORT=587" >> $GITHUB_ENV
+          echo "MAIL_SERVER=smtp.test.com" >> $GITHUB_ENV
+          echo "MAIL_TLS=true" >> $GITHUB_ENV
+          echo "MAIL_SSL=false" >> $GITHUB_ENV
+
       - name: Run tests with coverage
         run: |
           pytest --cov=app --cov-report=xml
