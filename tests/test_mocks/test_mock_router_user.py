@@ -76,7 +76,6 @@ async def test_create_user_unit(
     assert response.json()["email"] == "ana@example.com"
     mock_send_email.assert_awaited_once_with("ana@example.com", "Ana")
 
-
 @pytest.mark.asyncio
 @patch("app.services.users.get_user", new_callable=AsyncMock)
 async def test_read_user_success_unit(mock_get_user):
