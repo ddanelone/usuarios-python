@@ -2,13 +2,11 @@ from datetime import date
 import pytest
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import AsyncMock, patch
-from app.schemas.user import UserRead, UserRole
+from app.schemas.user import UserCreate, UserRead, UserRole
 import sys
 import os
 from app.main import app
 from app.core.dependencies import get_current_user
-from app.services.email import send_welcome_email
-
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -44,15 +42,21 @@ async def test_read_users_unit(mock_get_users):
     assert isinstance(response.json(), list)
     assert response.json()[0]["email"] == "ana@example.com"
 
-@patch("app.services.email.send_welcome_email", new_callable=AsyncMock)
+@pytest.mark.asyncio
+@patch("app.routers.user.send_welcome_email", new_callable=AsyncMock)
 @patch("app.services.users.crud_create_user", new_callable=AsyncMock)
 @patch("app.services.users.get_user_by_dni", new_callable=AsyncMock)
 @patch("app.services.users.crud_get_user_by_email", new_callable=AsyncMock)
-async def test_create_user_unit(mock_get_email, mock_get_dni, mock_create_user, mock_send_email):
+async def test_create_user_unit(
+    mock_get_email,
+    mock_get_dni,
+    mock_create_user,
+    mock_send_email,
+):
     mock_get_email.return_value = None
     mock_get_dni.return_value = None
     mock_create_user.return_value = fake_user
-    mock_send_email.return_value = None  # ← este es el mock real que necesitás
+    mock_send_email.return_value = None
 
     payload = {
         "nombres": "Ana",
@@ -69,7 +73,8 @@ async def test_create_user_unit(mock_get_email, mock_get_dni, mock_create_user, 
         response = await client.post("/users/", json=payload)
 
     assert response.status_code == 201
-    assert response.json()["email"] == fake_user.email
+    assert response.json()["email"] == "ana@example.com"
+    mock_send_email.assert_awaited_once_with("ana@example.com", "Ana")
 
 
 @pytest.mark.asyncio
