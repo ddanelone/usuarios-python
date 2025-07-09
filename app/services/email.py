@@ -23,6 +23,16 @@ async def send_reset_email(to_email: EmailStr, token: str):
          body=f"Hola,\n\nTu token de recuperación es: {token}",
          subtype=cast(MessageType, "plain")  
 )
+    fm = FastMail(conf)
+    await fm.send_message(message)
+
+async def send_welcome_email(to_email: EmailStr, name: str):
+    message = MessageSchema(
+        subject="¡Bienvenido a nuestra plataforma!",
+        recipients=[to_email],
+        body=f"Hola {name},\n\nGracias por registrarte. ¡Bienvenido!",
+        subtype=cast(MessageType, "plain")
+    )
 
     fm = FastMail(conf)
     await fm.send_message(message)
