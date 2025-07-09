@@ -44,16 +44,15 @@ async def test_read_users_unit(mock_get_users):
     assert isinstance(response.json(), list)
     assert response.json()[0]["email"] == "ana@example.com"
 
-@pytest.mark.asyncio
-@patch("app.routers.user.send_welcome_email", new_callable=AsyncMock)  # 👈 agregá este
+@patch("app.services.email.send_welcome_email", new_callable=AsyncMock)
 @patch("app.services.users.crud_create_user", new_callable=AsyncMock)
 @patch("app.services.users.get_user_by_dni", new_callable=AsyncMock)
 @patch("app.services.users.crud_get_user_by_email", new_callable=AsyncMock)
-async def test_create_user_unit(mock_get_email, mock_get_dni, mock_create_user, mock_send_mail):
+async def test_create_user_unit(mock_get_email, mock_get_dni, mock_create_user, mock_send_email):
     mock_get_email.return_value = None
     mock_get_dni.return_value = None
     mock_create_user.return_value = fake_user
-    mock_send_mail.return_value = None  # 👈 necesario
+    mock_send_email.return_value = None  # ← este es el mock real que necesitás
 
     payload = {
         "nombres": "Ana",
