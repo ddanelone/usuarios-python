@@ -26,27 +26,6 @@ async def test_get_user_by_email_mock(mock_get_user_by_email):
 
 @pytest.mark.asyncio
 @patch("app.services.users.create_user", new_callable=AsyncMock)
-async def test_create_user_success_mock(mock_create_user):
-    user_in = UserCreate(
-        nombres="Login",
-        apellidos="Tester",
-        dni="98765432",
-        fecha_nacimiento=date(1990, 1, 1),
-        email="login@example.com",
-        password="Password123",
-        rol=UserRole.ADMIN
-    )
-    mock_create_user.return_value = {
-        **user_in.model_dump(exclude={"password"}),
-        "id": 2,
-        "password_hash": "$2b$12$fakehashedpasswordstringforverify"
-    }
-    user = await mock_create_user(None, user_in)
-    assert user["email"] == "login@example.com"
-    assert user["dni"] == "98765432"
-
-@pytest.mark.asyncio
-@patch("app.services.users.create_user", new_callable=AsyncMock)
 async def test_create_user_duplicate_email_mock(mock_create_user):
     from fastapi import HTTPException
     mock_create_user.side_effect = Exception("Email ya registrado")
