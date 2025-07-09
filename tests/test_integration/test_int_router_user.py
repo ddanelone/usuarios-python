@@ -3,7 +3,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
-
+from unittest.mock import AsyncMock, patch
 
 @pytest.mark.asyncio
 async def test_create_user_success(async_client: AsyncClient):
@@ -16,13 +16,14 @@ async def test_create_user_success(async_client: AsyncClient):
         "password": "Password123",
         "rol": "ALUMNO"
     }
-    response = await async_client.post("/users/", json=user_data)
+    with patch("app.routers.user.send_welcome_email", new_callable=AsyncMock) as mock_email:
+        mock_email.return_value = None
+        response = await async_client.post("/users/", json=user_data)
     assert response.status_code == 201
     data = response.json()
     assert data["email"] == user_data["email"]
     assert data["rol"] == user_data["rol"]
     assert "id" in data
-
 
 @pytest.mark.asyncio
 async def test_get_users_requires_auth(async_client: AsyncClient):
@@ -115,7 +116,8 @@ async def test_create_user_duplicate_dni(async_client: AsyncClient, test_user):
 
 @pytest.mark.asyncio
 async def test_update_user_by_admin(async_client: AsyncClient, async_db):
-    # Crear admin
+    from unittest.mock import AsyncMock, patch
+
     admin_data = {
         "nombres": "Admin",
         "apellidos": "User",
@@ -125,9 +127,9 @@ async def test_update_user_by_admin(async_client: AsyncClient, async_db):
         "password": "Password123",
         "rol": "ADMIN"
     }
-    await async_client.post("/users/", json=admin_data)
+    with patch("app.routers.user.send_welcome_email", new_callable=AsyncMock):
+        await async_client.post("/users/", json=admin_data)
 
-    # Login admin
     login_resp = await async_client.post("/auth/login", json={
         "email": admin_data["email"],
         "password": admin_data["password"]
@@ -135,7 +137,6 @@ async def test_update_user_by_admin(async_client: AsyncClient, async_db):
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Crear otro user para editar
     other_data = {
         "nombres": "Pedro",
         "apellidos": "Picapiedra",
@@ -145,8 +146,13 @@ async def test_update_user_by_admin(async_client: AsyncClient, async_db):
         "password": "Password123",
         "rol": "ALUMNO"
     }
-    create_resp = await async_client.post("/users/", json=other_data)
+    with patch("app.routers.user.send_welcome_email", new_callable=AsyncMock):
+        create_resp = await async_client.post("/users/", json=other_data)
     user_id = create_resp.json()["id"]
+
+    update_resp = await async_client.put(f"/users/{user_id}", json={"nombres": "Peter"}, headers=headers)
+    assert update_resp.status_code == 200
+    assert update_resp.json()["nombres"] == "Peter"
 
     # Admin edita a Pedro
     update_resp = await async_client.put(f"/users/{user_id}", json={"nombres": "Peter"}, headers=headers)
@@ -155,7 +161,6 @@ async def test_update_user_by_admin(async_client: AsyncClient, async_db):
 
 @pytest.mark.asyncio
 async def test_delete_user_self_allowed(async_client: AsyncClient):
-    # Crear user normal
     user_data = {
         "nombres": "Beto",
         "apellidos": "Borges",
@@ -165,10 +170,10 @@ async def test_delete_user_self_allowed(async_client: AsyncClient):
         "password": "Password123",
         "rol": "ALUMNO"
     }
-    create = await async_client.post("/users/", json=user_data)
+    with patch("app.routers.user.send_welcome_email", new_callable=AsyncMock):
+        create = await async_client.post("/users/", json=user_data)
     user_id = create.json()["id"]
 
-    # Login
     login = await async_client.post("/auth/login", json={
         "email": user_data["email"],
         "password": user_data["password"]
@@ -176,39 +181,33 @@ async def test_delete_user_self_allowed(async_client: AsyncClient):
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Eliminarse a sí mismo
     delete = await async_client.delete(f"/users/{user_id}", headers=headers)
     assert delete.status_code == 204
-
 @pytest.mark.asyncio
 async def test_delete_user_by_admin_forbidden_self(async_client: AsyncClient):
-    # Crear el admin por si no existe
-    await async_client.post("/users/", json={
-        "nombres": "Admin",
-        "apellidos": "User",
-        "dni": "99999999",
-        "fecha_nacimiento": "1980-01-01",
-        "email": "admin@example.com",
-        "password": "Password123",
-        "rol": "ADMIN"
-    })
+    with patch("app.routers.user.send_welcome_email", new_callable=AsyncMock):
+        await async_client.post("/users/", json={
+            "nombres": "Admin",
+            "apellidos": "User",
+            "dni": "99999999",
+            "fecha_nacimiento": "1980-01-01",
+            "email": "admin@example.com",
+            "password": "Password123",
+            "rol": "ADMIN"
+        })
 
-    # Login como admin
     login_resp = await async_client.post("/auth/login", json={
         "email": "admin@example.com",
         "password": "Password123"
     })
-
-    assert login_resp.status_code == 200, f"Login fallido: {login_resp.text}"
+    assert login_resp.status_code == 200
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Obtener ID del admin
     whoami = await async_client.get("/users/", headers=headers)
     assert whoami.status_code == 200
     admin_id = [u for u in whoami.json() if u["email"] == "admin@example.com"][0]["id"]
 
-    # Intentar eliminarse a sí mismo
     response = await async_client.delete(f"/users/{admin_id}", headers=headers)
     assert response.status_code == 403
     assert response.json()["detail"] == "Un administrador no puede eliminarse a sí mismo"

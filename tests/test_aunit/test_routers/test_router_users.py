@@ -6,6 +6,7 @@ from datetime import date
 from app.core.security import create_access_token
 from app.schemas.user import UserCreate, UserRole
 from app.crud.user import create_user
+from unittest.mock import AsyncMock, patch
 
 async def create_test_user_in_db(db, **kwargs):
     user_data = {
@@ -26,7 +27,10 @@ def get_auth_header(email: str):
     return {"Authorization": f"Bearer {token}"}
 
 @pytest.mark.asyncio
-async def test_create_user(async_client: AsyncClient):
+@patch("app.routers.user.send_welcome_email", new_callable=AsyncMock)
+async def test_create_user(mock_send_email, async_client):
+    mock_send_email.return_value = None
+
     payload = {
         "nombres": "Ana",
         "apellidos": "Gómez",
@@ -39,6 +43,7 @@ async def test_create_user(async_client: AsyncClient):
     response = await async_client.post("/users/", json=payload)
     assert response.status_code == 201
     assert response.json()["email"] == "ana@example.com"
+    mock_send_email.assert_awaited_once()
 
 @pytest.mark.asyncio
 async def test_read_users_success(async_client: AsyncClient, async_db):
