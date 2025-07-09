@@ -10,6 +10,7 @@ from app.core.dependencies import get_current_user
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+# Usuario simulado
 fake_user = UserRead(
     id=1,
     nombres="Ana",
@@ -20,6 +21,7 @@ fake_user = UserRead(
     rol=UserRole.DOCENTE,
 )
 
+# Mock de autenticación
 @pytest.fixture(autouse=True)
 def override_current_user():
     async def _mocked_current_user():
@@ -28,9 +30,8 @@ def override_current_user():
     yield
     app.dependency_overrides.clear()
 
-
 @pytest.mark.asyncio
-@patch("app.routers.user.get_users", new_callable=AsyncMock)
+@patch("app.services.users.get_users", new_callable=AsyncMock)
 async def test_read_users_unit(mock_get_users):
     mock_get_users.return_value = [fake_user]
     transport = ASGITransport(app=app)
@@ -41,12 +42,11 @@ async def test_read_users_unit(mock_get_users):
     assert isinstance(response.json(), list)
     assert response.json()[0]["email"] == "ana@example.com"
 
-
 @pytest.mark.asyncio
-@patch("app.routers.user.get_user_by_email", new_callable=AsyncMock)
-@patch("app.routers.user.get_user_by_dni", new_callable=AsyncMock)
-@patch("app.routers.user.create_user", new_callable=AsyncMock)
-async def test_create_user_unit(mock_create_user, mock_get_dni, mock_get_email):
+@patch("app.services.users.crud_create_user", new_callable=AsyncMock)
+@patch("app.services.users.get_user_by_dni", new_callable=AsyncMock)
+@patch("app.services.users.crud_get_user_by_email", new_callable=AsyncMock)
+async def test_create_user_unit(mock_get_email, mock_get_dni, mock_create_user):
     mock_get_email.return_value = None
     mock_get_dni.return_value = None
     mock_create_user.return_value = fake_user
@@ -68,9 +68,8 @@ async def test_create_user_unit(mock_create_user, mock_get_dni, mock_get_email):
     assert response.status_code == 201
     assert response.json()["email"] == fake_user.email
 
-
 @pytest.mark.asyncio
-@patch("app.routers.user.get_user", new_callable=AsyncMock)
+@patch("app.services.users.get_user", new_callable=AsyncMock)
 async def test_read_user_success_unit(mock_get_user):
     mock_get_user.return_value = fake_user
     transport = ASGITransport(app=app)
@@ -80,9 +79,8 @@ async def test_read_user_success_unit(mock_get_user):
     assert response.status_code == 200
     assert response.json()["email"] == fake_user.email
 
-
 @pytest.mark.asyncio
-@patch("app.routers.user.get_user", new_callable=AsyncMock)
+@patch("app.services.users.get_user", new_callable=AsyncMock)
 async def test_read_user_not_found_unit(mock_get_user):
     mock_get_user.return_value = None
     transport = ASGITransport(app=app)
@@ -91,9 +89,8 @@ async def test_read_user_not_found_unit(mock_get_user):
 
     assert response.status_code == 404
 
-
 @pytest.mark.asyncio
-@patch("app.routers.user.update_user", new_callable=AsyncMock)
+@patch("app.services.users.update_user", new_callable=AsyncMock)
 async def test_update_user_unit(mock_update_user):
     mock_update_user.return_value = fake_user
     payload = {"nombres": "NuevoNombre", "email": "nuevo@example.com"}
@@ -105,9 +102,8 @@ async def test_update_user_unit(mock_update_user):
     assert response.status_code == 200
     assert response.json()["nombres"] == "Ana"
 
-
 @pytest.mark.asyncio
-@patch("app.routers.user.delete_user", new_callable=AsyncMock)
+@patch("app.services.users.delete_user", new_callable=AsyncMock)
 async def test_delete_user_unit(mock_delete_user):
     mock_delete_user.return_value = True
 
@@ -117,11 +113,13 @@ async def test_delete_user_unit(mock_delete_user):
 
     assert response.status_code == 204
 
-
 @pytest.mark.asyncio
-@patch("app.routers.user.update_user_password", new_callable=AsyncMock)
-async def test_update_password_unit(mock_update_password):
+@patch("app.routers.user.update_user_password", new_callable=AsyncMock)  # cambia esto
+@patch("app.services.users.get_user", new_callable=AsyncMock)
+async def test_update_password_unit(mock_get_user, mock_update_password):
+    mock_get_user.return_value = fake_user
     mock_update_password.return_value = None
+
     payload = {"current_password": "OldPass123", "new_password": "NewPass456"}
 
     transport = ASGITransport(app=app)
