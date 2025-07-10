@@ -44,10 +44,8 @@ async def test_read_users_unit(mock_get_users):
 
 @pytest.mark.asyncio
 @patch("app.routers.user.create_user_service", new_callable=AsyncMock)
-@patch("app.routers.user.send_welcome_email", new_callable=AsyncMock)
-async def test_create_user_unit(mock_send_email, mock_create_user):
+async def test_create_user_unit(mock_create_user):  
     mock_create_user.return_value = fake_user
-    mock_send_email.return_value = None
 
     payload = {
         "nombres": "Ana",
@@ -66,7 +64,6 @@ async def test_create_user_unit(mock_send_email, mock_create_user):
     assert response.status_code == 201
     assert response.json()["email"] == fake_user.email
     mock_create_user.assert_awaited_once()
-    mock_send_email.assert_awaited_once_with("ana@example.com", "Ana")
 
 @pytest.mark.asyncio
 @patch("app.services.users.get_user", new_callable=AsyncMock)

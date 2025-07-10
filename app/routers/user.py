@@ -8,7 +8,6 @@ from app.db.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate, UserUpdatePassword
 from app.db.session import get_session
 from app.core.dependencies import get_current_user
-from app.services.email import send_welcome_email
 from app.services.users import (
     create_user_service,
     get_users_service,
@@ -23,7 +22,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def create_user_endpoint(user_in: UserCreate, db: AsyncSession = Depends(get_session)):
     user = await create_user_service(db, user_in)
-    await send_welcome_email(user.email, user.nombres)
     logging.info(f"[ALTA USUARIO] Se creó el usuario {user.email} con rol {user.rol}.")
     return user
 

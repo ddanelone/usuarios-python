@@ -18,7 +18,7 @@ from app.crud.user import (
     delete_user
 )
 from app.schemas.user import UserCreate, UserUpdate
-
+from app.services.messaging import publish_email_message
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -85,6 +85,8 @@ async def create_user_service(db: AsyncSession, user_in: UserCreate) -> User:
     existing_dni = await get_user_by_dni(db, user_in.dni)
     if existing_dni:
         raise HTTPException(status_code=400, detail="DNI already registered")
+     
+    await publish_email_message(to=user_in.email, token="", type_="welcome_email")
 
     return await crud_create_user(db, user_in)
 

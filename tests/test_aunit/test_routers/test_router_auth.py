@@ -6,7 +6,7 @@ from app.crud.user import create_user
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import create_access_token
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from unittest.mock import ANY
 
 
@@ -39,9 +39,9 @@ async def test_login_success(async_client: AsyncClient, async_db: AsyncSession):
     assert data["user_role"] == "ADMIN"
 
 @pytest.mark.asyncio
-@patch("app.services.auth.send_reset_email")  # <-- CORRECTO
-async def test_forgot_password_success(mock_send_email, async_client: AsyncClient, async_db: AsyncSession):
-    mock_send_email.return_value = None
+@patch("app.services.auth.publish_email_message", new_callable=AsyncMock)
+async def test_forgot_password_success(mock_publish_email, async_client: AsyncClient, async_db: AsyncSession):
+    mock_publish_email.return_value = "mock-correlation-id"
 
     user_data = UserCreate(
         nombres="Forgot",
@@ -57,8 +57,13 @@ async def test_forgot_password_success(mock_send_email, async_client: AsyncClien
     response = await async_client.post("/auth/forgot-password", json={"email": "forgot@example.com"})
 
     assert response.status_code == 200
-    assert response.json()["message"].lower().startswith("se envió un email")
-    mock_send_email.assert_called_once_with("forgot@example.com", ANY)
+    assert response.json()["message"].lower().startswith("se envió un email con instrucciones.")
+
+    mock_publish_email.assert_called_once_with(
+        to="forgot@example.com",
+        token=ANY,
+        type_="reset_password"
+    )
 
 @pytest.mark.asyncio
 async def test_forgot_password_nonexistent_email(async_client: AsyncClient):

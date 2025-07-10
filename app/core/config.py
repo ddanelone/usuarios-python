@@ -13,24 +13,13 @@ class Settings(BaseSettings):
     LOCKOUT_TIME: int = 900 
     
     BCRYPT_ROUNDS: int = Field(default=12)
+    
+    RABBITMQ_URI: str = "amqp://guest:guest@localhost/"  # valor por defecto
 
     @property
     def lockout_duration(self) -> timedelta:
         return timedelta(seconds=self.LOCKOUT_TIME)
-     
-    # Inicio configuración del correo electrónico
-    MAIL_USERNAME: str
-    MAIL_PASSWORD: str
-    MAIL_FROM: str
-    MAIL_PORT: int
-    MAIL_SERVER: str
-    # COMENTAR SI NO USO MAILTRAP
-    MAIL_TLS: bool
-    MAIL_SSL: bool
-    USE_CREDENTIALS: bool = True
-    VALIDATE_CERTS: bool = True
-    # Fin de la configuración del correo electrónico
-
+        
     class Config:
         env_file = ".env"
 

@@ -8,6 +8,8 @@ from app.schemas.user import UserCreate, UserRole
 from app.crud.user import create_user
 from unittest.mock import AsyncMock, patch
 
+from app.services.users import create_user_service
+
 async def create_test_user_in_db(db, **kwargs):
     user_data = {
         "nombres": "Test",
@@ -27,24 +29,28 @@ def get_auth_header(email: str):
     return {"Authorization": f"Bearer {token}"}
 
 @pytest.mark.asyncio
-@patch("app.routers.user.send_welcome_email", new_callable=AsyncMock)
-async def test_create_user(mock_send_email, async_client):
-    mock_send_email.return_value = None
+@patch("app.services.users.publish_email_message", new_callable=AsyncMock)
+async def test_create_user_service_success(mock_publish, async_db):
+    user_in = UserCreate(
+        nombres="Juan",
+        apellidos="Test",
+        dni="30123456",
+        fecha_nacimiento=date(1990, 1, 1),
+        email="juan@test.com",
+        password="Segura123",
+        rol=UserRole.ALUMNO,
+    )
 
-    payload = {
-        "nombres": "Ana",
-        "apellidos": "Gómez",
-        "dni": "87654321",
-        "fecha_nacimiento": "1995-05-05",
-        "email": "ana@example.com",
-        "password": "Password123",
-        "rol": "DOCENTE"
-    }
-    response = await async_client.post("/users/", json=payload)
-    assert response.status_code == 201
-    assert response.json()["email"] == "ana@example.com"
-    mock_send_email.assert_awaited_once()
+    new_user = await create_user_service(async_db, user_in)
 
+    assert new_user.email == user_in.email
+    assert new_user.dni == user_in.dni
+    mock_publish.assert_called_once_with(
+        to=user_in.email,
+        token="",
+        type_="welcome_email",
+    )
+    
 @pytest.mark.asyncio
 async def test_read_users_success(async_client: AsyncClient, async_db):
     admin = await create_test_user_in_db(async_db, email="admin@example.com", dni="12345670", rol=UserRole.ADMIN)

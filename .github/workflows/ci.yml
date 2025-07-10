@@ -2,7 +2,7 @@ name: Run Tests & Upload Coverage
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/rabbitmq-emails]
   pull_request:
     branches: [main]
 

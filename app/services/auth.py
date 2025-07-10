@@ -12,9 +12,8 @@ from typing import cast
 import logging
 from datetime import datetime, timedelta
 import os
-
-from app.services.email import send_reset_email
 from app.services.users import update_user_password_by_email
+from app.services.messaging import publish_email_message
 
 
 MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", 3))
@@ -72,7 +71,6 @@ async def login_user(form_data, db: AsyncSession):
         user_role=user.rol
     )
 
-
 async def forgot_password_process(request, db: AsyncSession):
     user = await get_user_by_email(db, request.email.lower())
     if not user:
@@ -80,9 +78,10 @@ async def forgot_password_process(request, db: AsyncSession):
 
     token = create_password_reset_token(user.email)
 
-    await send_reset_email(user.email, token)
+    await publish_email_message(to=user.email, token=token, type_="reset_password")
 
     return {"message": "Se envió un email con instrucciones."}
+
 
 
 async def reset_password_process(request, db: AsyncSession):
