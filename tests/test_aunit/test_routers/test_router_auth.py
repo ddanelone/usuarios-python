@@ -29,7 +29,7 @@ async def test_login_success(async_client: AsyncClient, async_db: AsyncSession):
         "password": "Password123"
     }
 
-    response = await async_client.post("/auth/login", json=login_payload)
+    response = await async_client.post("/api/auth/login", json=login_payload)
 
     assert response.status_code == 200, response.text
     data = response.json()
@@ -54,7 +54,7 @@ async def test_forgot_password_success(mock_publish_email, async_client: AsyncCl
     )
     await create_user(async_db, user_data)
 
-    response = await async_client.post("/auth/forgot-password", json={"email": "forgot@example.com"})
+    response = await async_client.post("/api/auth/forgot-password", json={"email": "forgot@example.com"})
 
     assert response.status_code == 200
     assert response.json()["message"].lower().startswith("se envió un email con instrucciones.")
@@ -67,7 +67,7 @@ async def test_forgot_password_success(mock_publish_email, async_client: AsyncCl
 
 @pytest.mark.asyncio
 async def test_forgot_password_nonexistent_email(async_client: AsyncClient):
-    response = await async_client.post("/auth/forgot-password", json={"email": "noexiste@example.com"})
+    response = await async_client.post("/api/auth/forgot-password", json={"email": "noexiste@example.com"})
     assert response.status_code == 404
     assert "usuario no registrado" in response.json()["detail"].lower()
 
@@ -91,7 +91,7 @@ async def test_reset_password_success(async_client: AsyncClient, async_db: Async
         "new_password": "NewSecure123"
     }
 
-    response = await async_client.post("/auth/reset-password", json=payload)
+    response = await async_client.post("/api/auth/reset-password", json=payload)
     assert response.status_code == 200
     assert "contraseña actualizada exitosamente" in response.json()["message"].lower()
 
@@ -101,7 +101,7 @@ async def test_reset_password_invalid_token(async_client: AsyncClient):
         "token": "invalid.token.value",
         "new_password": "Whatever123"
     }
-    response = await async_client.post("/auth/reset-password", json=payload)
+    response = await async_client.post("/api/auth/reset-password", json=payload)
     assert response.status_code == 400
     assert "token inválido" in response.json()["detail"].lower()
 
@@ -123,7 +123,7 @@ async def test_login_wrong_credentials(async_client: AsyncClient, async_db: Asyn
         "password": "IncorrectPassword"
     }
 
-    response = await async_client.post("/auth/login", json=login_payload)
+    response = await async_client.post("/api/auth/login", json=login_payload)
     assert response.status_code == 401
     assert "incorrect email or password" in response.json()["detail"].lower()
 

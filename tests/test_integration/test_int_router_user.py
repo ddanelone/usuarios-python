@@ -1,5 +1,4 @@
 # tests/integration/test_int_router_user.py
-
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +18,7 @@ async def test_create_user_success(async_client: AsyncClient):
     }
     with patch("app.services.users.publish_email_message") as mock_publish:
         mock_publish.return_value = None
-        response = await async_client.post("/users/", json=user_data)
+        response = await async_client.post("/api/users/", json=user_data)
 
     assert response.status_code == 201
     data = response.json()
@@ -30,43 +29,43 @@ async def test_create_user_success(async_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_users_requires_auth(async_client: AsyncClient):
-    response = await async_client.get("/users/")
+    response = await async_client.get("/api/users/")
     assert response.status_code in [401, 403]
 
 @pytest.mark.asyncio
 async def test_read_user_authenticated(async_client: AsyncClient, test_user):
-    login_resp = await async_client.post("/auth/login", json={
+    login_resp = await async_client.post("/api/auth/login", json={
         "email": test_user.email,
         "password": "Password123"
     })
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = await async_client.get(f"/users/{test_user.id}", headers=headers)
+    response = await async_client.get(f"/api/users/{test_user.id}", headers=headers)
     assert response.status_code == 200
     assert response.json()["email"] == test_user.email
 
 @pytest.mark.asyncio
 async def test_update_user_unauthorized(async_client: AsyncClient, test_user):
-    response = await async_client.put(f"/users/{test_user.id}", json={"nombres": "NuevoNombre"})
+    response = await async_client.put(f"/api/users/{test_user.id}", json={"nombres": "NuevoNombre"})
     assert response.status_code in [401, 403]
 
 @pytest.mark.asyncio
 async def test_change_password_success(async_client: AsyncClient, test_user):
-    login_resp = await async_client.post("/auth/login", json={
+    login_resp = await async_client.post("/api/auth/login", json={
         "email": test_user.email,
         "password": "Password123"
     })
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = await async_client.patch(f"/users/{test_user.id}/password", headers=headers, json={
+    response = await async_client.patch(f"/api/users/{test_user.id}/password", headers=headers, json={
         "current_password": "Password123",
         "new_password": "NewPassword123"
     })
     assert response.status_code == 204
 
-    login_resp = await async_client.post("/auth/login", json={
+    login_resp = await async_client.post("/api/auth/login", json={
         "email": test_user.email,
         "password": "NewPassword123"
     })
@@ -84,7 +83,7 @@ async def test_create_user_duplicate_email(async_client: AsyncClient, test_user)
         "rol": "ALUMNO"
     }
     with patch("app.services.users.publish_email_message"):
-        response = await async_client.post("/users/", json=user_data)
+        response = await async_client.post("/api/users/", json=user_data)
     assert response.status_code == 400
     assert "email" in response.text.lower()
 
@@ -100,7 +99,7 @@ async def test_create_user_duplicate_dni(async_client: AsyncClient, test_user):
         "rol": "ALUMNO"
     }
     with patch("app.services.users.publish_email_message"):
-        response = await async_client.post("/users/", json=user_data)
+        response = await async_client.post("/api/users/", json=user_data)
     assert response.status_code == 400
     assert "dni" in response.text.lower()
 
@@ -116,9 +115,9 @@ async def test_update_user_by_admin(async_client: AsyncClient, async_db: AsyncSe
         "rol": "ADMIN"
     }
     with patch("app.services.users.publish_email_message"):
-        await async_client.post("/users/", json=admin_data)
+        await async_client.post("/api/users/", json=admin_data)
 
-    login_resp = await async_client.post("/auth/login", json={
+    login_resp = await async_client.post("/api/auth/login", json={
         "email": admin_data["email"],
         "password": admin_data["password"]
     })
@@ -135,11 +134,11 @@ async def test_update_user_by_admin(async_client: AsyncClient, async_db: AsyncSe
         "rol": "ALUMNO"
     }
     with patch("app.services.users.publish_email_message"):
-        create_resp = await async_client.post("/users/", json=other_data)
+        create_resp = await async_client.post("/api/users/", json=other_data)
 
     user_id = create_resp.json()["id"]
 
-    update_resp = await async_client.put(f"/users/{user_id}", json={"nombres": "Peter"}, headers=headers)
+    update_resp = await async_client.put(f"/api/users/{user_id}", json={"nombres": "Peter"}, headers=headers)
     assert update_resp.status_code == 200
     assert update_resp.json()["nombres"] == "Peter"
 
@@ -155,23 +154,23 @@ async def test_delete_user_self_allowed(async_client: AsyncClient):
         "rol": "ALUMNO"
     }
     with patch("app.services.users.publish_email_message"):
-        create = await async_client.post("/users/", json=user_data)
+        create = await async_client.post("/api/users/", json=user_data)
     user_id = create.json()["id"]
 
-    login = await async_client.post("/auth/login", json={
+    login = await async_client.post("/api/auth/login", json={
         "email": user_data["email"],
         "password": user_data["password"]
     })
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    delete = await async_client.delete(f"/users/{user_id}", headers=headers)
+    delete = await async_client.delete(f"/api/users/{user_id}", headers=headers)
     assert delete.status_code == 204
 
 @pytest.mark.asyncio
 async def test_delete_user_by_admin_forbidden_self(async_client: AsyncClient):
     with patch("app.services.users.publish_email_message"):
-        await async_client.post("/users/", json={
+        await async_client.post("/api/users/", json={
             "nombres": "Admin",
             "apellidos": "User",
             "dni": "99999999",
@@ -181,17 +180,17 @@ async def test_delete_user_by_admin_forbidden_self(async_client: AsyncClient):
             "rol": "ADMIN"
         })
 
-    login_resp = await async_client.post("/auth/login", json={
+    login_resp = await async_client.post("/api/auth/login", json={
         "email": "admin@example.com",
         "password": "Password123"
     })
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    whoami = await async_client.get("/users/", headers=headers)
+    whoami = await async_client.get("/api/users/", headers=headers)
     admin_id = [u for u in whoami.json() if u["email"] == "admin@example.com"][0]["id"]
 
-    response = await async_client.delete(f"/users/{admin_id}", headers=headers)
+    response = await async_client.delete(f"/api/users/{admin_id}", headers=headers)
     assert response.status_code == 403
     assert response.json()["detail"] == "Un administrador no puede eliminarse a sí mismo"
 
@@ -210,27 +209,27 @@ async def test_delete_user_not_found(async_client: AsyncClient, async_db: AsyncS
         rol=UserRole.ADMIN
     ))
 
-    login = await async_client.post("/auth/login", json={
+    login = await async_client.post("/api/auth/login", json={
         "email": "admin@example.com",
         "password": "Password123"
     })
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = await async_client.delete("/users/9999", headers=headers)
+    response = await async_client.delete("/api/users/9999", headers=headers)
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
 
 @pytest.mark.asyncio
 async def test_change_password_wrong_current(async_client: AsyncClient, test_user):
-    login = await async_client.post("/auth/login", json={
+    login = await async_client.post("/api/auth/login", json={
         "email": test_user.email,
         "password": "Password123"
     })
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = await async_client.patch(f"/users/{test_user.id}/password", headers=headers, json={
+    response = await async_client.patch(f"/api/users/{test_user.id}/password", headers=headers, json={
         "current_password": "WrongPass123",
         "new_password": "OtraPassword123"
     })
@@ -239,14 +238,14 @@ async def test_change_password_wrong_current(async_client: AsyncClient, test_use
 
 @pytest.mark.asyncio
 async def test_change_password_invalid_new(async_client: AsyncClient, test_user):
-    login = await async_client.post("/auth/login", json={
+    login = await async_client.post("/api/auth/login", json={
         "email": test_user.email,
         "password": "Password123"
     })
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = await async_client.patch(f"/users/{test_user.id}/password", headers=headers, json={
+    response = await async_client.patch(f"/api/users/{test_user.id}/password", headers=headers, json={
         "current_password": "Password123",
         "new_password": "123"
     })
@@ -267,18 +266,18 @@ async def test_update_user_not_found(async_client: AsyncClient, async_db: AsyncS
         rol=UserRole.ADMIN
     ))
 
-    login = await async_client.post("/auth/login", json={
+    login = await async_client.post("/api/auth/login", json={
         "email": "admin-updater@example.com",
         "password": "Password123"
     })
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = await async_client.put("/users/9999", headers=headers, json={"nombres": "Nuevo"})
+    response = await async_client.put("/api/users/9999", headers=headers, json={"nombres": "Nuevo"})
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
 
 @pytest.mark.asyncio
 async def test_get_user_unauthorized(async_client: AsyncClient):
-    response = await async_client.get("/users/1")
+    response = await async_client.get("/api/users/1")
     assert response.status_code in [401, 403]

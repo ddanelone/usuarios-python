@@ -32,7 +32,7 @@ async def test_login_success_mock(mock_login_user):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/auth/login", json={"email": fake_user.email, "password": "fakepass"})
+        response = await client.post("/api/auth/login", json={"email": fake_user.email, "password": "fakepass"})
 
     assert response.status_code == 200
     json_data = response.json()
@@ -48,7 +48,7 @@ async def test_forgot_password_success_mock(mock_forgot_password):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/auth/forgot-password", json={"email": fake_user.email})
+        response = await client.post("/api/auth/forgot-password", json={"email": fake_user.email})
 
     assert response.status_code == 200
     assert "se envió un email" in response.json()["message"].lower()
@@ -62,7 +62,7 @@ async def test_reset_password_success_mock(mock_reset_password):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/auth/reset-password", json=payload)
+        response = await client.post("/api/auth/reset-password", json=payload)
 
     assert response.status_code == 200
     assert "contraseña actualizada" in response.json()["message"].lower()
@@ -76,7 +76,7 @@ async def test_login_wrong_credentials_mock(mock_login_user):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/auth/login", json={"email": "wrong@example.com", "password": "badpass"})
+        response = await client.post("/api/auth/login", json={"email": "wrong@example.com", "password": "badpass"})
 
     assert response.status_code == 401
     assert "incorrect email or password" in response.json()["detail"].lower()
@@ -89,7 +89,7 @@ async def test_forgot_password_nonexistent_email_mock(mock_forgot_password):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/auth/forgot-password", json={"email": "noexiste@example.com"})
+        response = await client.post("/api/auth/forgot-password", json={"email": "noexiste@example.com"})
 
     assert response.status_code == 404
     assert "usuario no registrado" in response.json()["detail"].lower()
@@ -104,7 +104,7 @@ async def test_reset_password_invalid_token_mock(mock_reset_password):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/auth/reset-password", json=payload)
+        response = await client.post("/api/auth/reset-password", json=payload)
 
     assert response.status_code == 400
     assert "token inválido" in response.json()["detail"].lower()

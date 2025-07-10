@@ -55,13 +55,13 @@ async def test_create_user_service_success(mock_publish, async_db):
 async def test_read_users_success(async_client: AsyncClient, async_db):
     admin = await create_test_user_in_db(async_db, email="admin@example.com", dni="12345670", rol=UserRole.ADMIN)
     headers = get_auth_header(admin.email)
-    response = await async_client.get("/users/", headers=headers)
+    response = await async_client.get("/api/users/", headers=headers)
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
 @pytest.mark.asyncio
 async def test_read_users_unauthorized(async_client: AsyncClient):
-    response = await async_client.get("/users/")
+    response = await async_client.get("/api/users/")
     assert response.status_code == 401 or response.status_code == 403
 
 @pytest.mark.asyncio
@@ -70,7 +70,7 @@ async def test_read_user_success(async_client: AsyncClient, async_db):
     user = await create_test_user_in_db(async_db, email="readme@example.com", dni="12345672")
     headers = get_auth_header(admin.email)
 
-    response = await async_client.get(f"/users/{user.id}", headers=headers)
+    response = await async_client.get(f"/api/users/{user.id}", headers=headers)
     assert response.status_code == 200
     assert response.json()["email"] == user.email
 
@@ -79,7 +79,7 @@ async def test_read_user_not_found(async_client: AsyncClient, async_db):
     admin = await create_test_user_in_db(async_db, email="admin@example.com", dni="31234567", rol=UserRole.ADMIN)
     headers = get_auth_header(admin.email)
 
-    response = await async_client.get("/users/99999", headers=headers)
+    response = await async_client.get("/api/users/99999", headers=headers)
     assert response.status_code == 404
 
 @pytest.mark.asyncio
@@ -88,7 +88,7 @@ async def test_update_user_self_success(async_client: AsyncClient, async_db):
     headers = get_auth_header(user.email)
     payload = {"nombres": "NuevoNombre", "email": "nuevo@example.com"}
 
-    response = await async_client.put(f"/users/{user.id}", json=payload, headers=headers)
+    response = await async_client.put(f"/api/users/{user.id}", json=payload, headers=headers)
     assert response.status_code == 200
     assert response.json()["nombres"] == "NuevoNombre"
 
@@ -98,7 +98,7 @@ async def test_update_user_no_permission(async_client: AsyncClient, async_db):
     user2 = await create_test_user_in_db(async_db, email="user2@example.com", dni="61234567")
     headers = get_auth_header(user1.email)
 
-    response = await async_client.put(f"/users/{user2.id}", json={"nombres": "Hacker"}, headers=headers)
+    response = await async_client.put(f"/api/users/{user2.id}", json={"nombres": "Hacker"}, headers=headers)
     assert response.status_code == 403
 
 @pytest.mark.asyncio
@@ -107,7 +107,7 @@ async def test_delete_user_by_admin(async_client: AsyncClient, async_db):
     user = await create_test_user_in_db(async_db, email="victim@example.com", dni="81234567")
     headers = get_auth_header(admin.email)
 
-    response = await async_client.delete(f"/users/{user.id}", headers=headers)
+    response = await async_client.delete(f"/api/users/{user.id}", headers=headers)
     assert response.status_code == 204
 
 @pytest.mark.asyncio
@@ -115,7 +115,7 @@ async def test_admin_cannot_delete_self(async_client: AsyncClient, async_db):
     admin = await create_test_user_in_db(async_db, email="admin@example.com", dni="91234567", rol=UserRole.ADMIN)
     headers = get_auth_header(admin.email)
 
-    response = await async_client.delete(f"/users/{admin.id}", headers=headers)
+    response = await async_client.delete(f"/api/users/{admin.id}", headers=headers)
     assert response.status_code == 403
     assert "no puede eliminarse" in response.json()["detail"].lower()
 
@@ -125,7 +125,7 @@ async def test_user_cannot_delete_other_user(async_client: AsyncClient, async_db
     user2 = await create_test_user_in_db(async_db, email="user2@example.com", dni="11123456")
     headers = get_auth_header(user1.email)
 
-    response = await async_client.delete(f"/users/{user2.id}", headers=headers)
+    response = await async_client.delete(f"/api/users/{user2.id}", headers=headers)
     assert response.status_code == 403
 
 @pytest.mark.asyncio
@@ -133,7 +133,7 @@ async def test_user_can_delete_self(async_client: AsyncClient, async_db):
     user = await create_test_user_in_db(async_db, email="deleteme@example.com", dni="12123456")
     headers = get_auth_header(user.email)
 
-    response = await async_client.delete(f"/users/{user.id}", headers=headers)
+    response = await async_client.delete(f"/api/users/{user.id}", headers=headers)
     assert response.status_code == 204
 
 @pytest.mark.asyncio
@@ -142,7 +142,7 @@ async def test_update_password_success(async_client: AsyncClient, async_db):
     headers = get_auth_header(user.email)
     payload = {"current_password": "OldPass123", "new_password": "NewPass456"}
 
-    response = await async_client.patch(f"/users/{user.id}/password", json=payload, headers=headers)
+    response = await async_client.patch(f"/api/users/{user.id}/password", json=payload, headers=headers)
     assert response.status_code == 204
 
 @pytest.mark.asyncio
@@ -151,7 +151,7 @@ async def test_update_password_wrong_current(async_client: AsyncClient, async_db
     headers = get_auth_header(user.email)
     payload = {"current_password": "WrongPass", "new_password": "NewPass456"}
 
-    response = await async_client.patch(f"/users/{user.id}/password", json=payload, headers=headers)
+    response = await async_client.patch(f"/api/users/{user.id}/password", json=payload, headers=headers)
     assert response.status_code == 403
     assert "incorrecta" in response.json()["detail"].lower()
 
@@ -163,5 +163,5 @@ async def test_update_password_not_self(async_client: AsyncClient, async_db):
     headers = get_auth_header(user1.email)
     payload = {"current_password": "MiPass123", "new_password": "Nuevo123"}
 
-    response = await async_client.patch(f"/users/{user2.id}/password", json=payload, headers=headers)
+    response = await async_client.patch(f"/api/users/{user2.id}/password", json=payload, headers=headers)
     assert response.status_code == 403

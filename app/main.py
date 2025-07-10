@@ -12,8 +12,9 @@ configure_logging()
 
 app = FastAPI()
 
-app.include_router(user.router)
-app.include_router(auth.router)  # <--- acá incluimos el auth
+app.include_router(user.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")  
+#app.include_router(tp1_inciso_1.router, prefix="/api/tp1")
 
 @app.on_event("startup")
 async def startup():

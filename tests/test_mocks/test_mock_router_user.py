@@ -36,7 +36,7 @@ async def test_read_users_unit(mock_get_users):
     mock_get_users.return_value = [fake_user]
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/users/", headers={"Authorization": "Bearer token"})
+        response = await client.get("/api/users/", headers={"Authorization": "Bearer token"})
 
     assert response.status_code == 200
     assert isinstance(response.json(), list)
@@ -59,7 +59,7 @@ async def test_create_user_unit(mock_create_user):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/users/", json=payload)
+        response = await client.post("/api/users/", json=payload)
 
     assert response.status_code == 201
     assert response.json()["email"] == fake_user.email
@@ -71,7 +71,7 @@ async def test_read_user_success_unit(mock_get_user):
     mock_get_user.return_value = fake_user
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/users/1", headers={"Authorization": "Bearer token"})
+        response = await client.get("/api/users/1", headers={"Authorization": "Bearer token"})
 
     assert response.status_code == 200
     assert response.json()["email"] == fake_user.email
@@ -82,7 +82,7 @@ async def test_read_user_not_found_unit(mock_get_user):
     mock_get_user.return_value = None
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/users/999", headers={"Authorization": "Bearer token"})
+        response = await client.get("/api/users/999", headers={"Authorization": "Bearer token"})
 
     assert response.status_code == 404
 
@@ -94,7 +94,7 @@ async def test_update_user_unit(mock_update_user):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.put("/users/1", json=payload, headers={"Authorization": "Bearer token"})
+        response = await client.put("/api/users/1", json=payload, headers={"Authorization": "Bearer token"})
 
     assert response.status_code == 200
     assert response.json()["nombres"] == "Ana"
@@ -106,7 +106,7 @@ async def test_delete_user_unit(mock_delete_user):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.delete("/users/1", headers={"Authorization": "Bearer token"})
+        response = await client.delete("/api/users/1", headers={"Authorization": "Bearer token"})
 
     assert response.status_code == 204
 
@@ -121,6 +121,6 @@ async def test_update_password_unit(mock_get_user, mock_update_password):
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.patch("/users/1/password", json=payload, headers={"Authorization": "Bearer token"})
+        response = await client.patch("/api/users/1/password", json=payload, headers={"Authorization": "Bearer token"})
 
     assert response.status_code == 204
